@@ -1,0 +1,9 @@
+cybox==2.1.0.21
+fqdn==1.5.1
+lxml==4.6.3
+mixbox==1.0.5
+ordered-set==4.0.2
+python-dateutil==2.8.1
+six==1.15.0
+stix==1.2.0.11
+weakrefmethod==1.0.3
