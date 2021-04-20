@@ -1,8 +1,8 @@
 # Created by Nozomi Networks Labs
 
 import sys
-if not sys.version_info >= (3, 4):
-    print("Please use python 3")
+if sys.version_info < (3, 4):
+    print("Please use python >= 3.4")
     exit(1)
 
 import argparse
@@ -16,7 +16,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument("-i", metavar="INFILE", dest="infile", help="Input file containing raw indicators", required=True)
     parser.add_argument("-o", metavar="OUTFILE", dest="outfile", help="STIX file containing the indicators", required=True)
-    parser.add_argument("-c", metavar="Author", dest="author", default="Nozomi Networks Labs", help="Author creating the STIX")
+    parser.add_argument("-a", metavar="AUTHOR", dest="author", default="Nozomi Networks Labs", help="Author creating the STIX")
     parser.add_argument("-t", metavar="THREAT", dest="threat", help="Threat name")
     parser.add_argument("-d", metavar="DESCRIPTION", dest="description", help="Threat description")
     parser.add_argument("-s", metavar="SOURCE_INFO", dest="srcinfo", help="Source information")
@@ -26,10 +26,10 @@ if __name__ == "__main__":
     # Init logging
     init_logging("INFO")
 
-    stix = StixManager(company=args.author)
+    stix = StixManager(author=args.author)
     logging.info("Title: %s" % args.threat)
     logging.info("Description: %s" % args.description)
-    logging.info("Company: %s" % args.author)
+    logging.info("Author: %s" % args.author)
     logging.info("Source: %s" % args.srcinfo)
     logging.info("Reference: %s" % args.reference)
 
@@ -42,5 +42,3 @@ if __name__ == "__main__":
 
     # Store result
     stix.save_stix_file(args.outfile)
-    
-    exit(0)

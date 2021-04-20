@@ -1,13 +1,13 @@
 # Created by Nozomi Networks Labs
 
 import re, socket, warnings, logging
+import validators
 warnings.filterwarnings("ignore")
 
 from .logger import *
 from fqdn import FQDN
 from enum import Enum
 from datetime import datetime
-from urllib.parse import urlparse
 
 # python-stix
 import stix.utils as utils
@@ -22,10 +22,6 @@ from cybox.objects.file_object import File
 from cybox.objects.address_object import Address
 from cybox.objects.domain_name_object import DomainName
 from cybox.bindings import domain_name_object, file_object, uri_object, address_object
-
-
-# The following code was added to resolve an issue with missing name spaces. If the namespace "http://us-cert.gov/ciscp" is in a stix file, the program crashes
-# as for some reason those name spaces are not in the library. As of April 2019 the problem is known, and this is a work around.
 from stix.utils import nsparser
 import mixbox.namespaces
 from mixbox.namespaces import Namespace
@@ -69,7 +65,7 @@ class StixIndicator:
         return self._type == StixItemType.UNKNOWN
 
 class StixManager(object):
-    def __init__(self, threat_name="Generic Threat", threat_descr="Generic Threat", company="Nozomi Networks Labs" , log=True):
+    def __init__(self, threat_name="Generic Threat", threat_descr="Generic Threat", author="Nozomi Networks Labs" , log=True):
 
         for i in ADDITIONAL_NAMESPACES:
             nsparser.STIX_NAMESPACES.add_namespace(i)
@@ -81,7 +77,7 @@ class StixManager(object):
         self.__regex_md5 = re.compile(r"^[a-f0-9]{32}$", re.IGNORECASE)
         self.__regex_sha1 = re.compile(r"^[a-f0-9]{40}$", re.IGNORECASE)
         self._src_file = None
-        self.__company = company
+        self.__author = author
         
 
         self._lookup = set()
@@ -120,8 +116,8 @@ class StixManager(object):
             if fqdn.is_valid:
                 return StixItemType.DOMAIN, "domain"
 
-        url = urlparse(value)
-        if 3 <= len(url.scheme) <= 5 and url.netloc:
+        # URLs
+        if validators.url(value):
             return StixItemType.URL, "URL"
 
         return StixItemType.UNKNOWN, "unknown"
@@ -163,10 +159,10 @@ class StixManager(object):
         hdr.add_description(threat_descr)
         hdr.information_source = InformationSource()
 
-        if threat_source != None:
+        if threat_source is not None:
             hdr.information_source.description = threat_source
 
-        if reference != None:
+        if reference is not None:
             hdr.information_source.references = fields.TypedField(reference, References)
 
         # Set the produced time to now
@@ -178,7 +174,6 @@ class StixManager(object):
     def add_raw_indicator(self , orig_indicator, ts=None):
         indicator_value = orig_indicator
         if not self._is_ascii(indicator_value):
-            #print("WARNING: the indicator %s is not ASCII-decodable" % indicator_value)
             return False
 
         indicator_type, _ = self.guess_type(indicator_value)
@@ -221,7 +216,7 @@ class StixManager(object):
         indicator.title = title
         indicator.description = descr
         indicator.add_object(cybox)
-        indicator.set_producer_identity(self.__company)
+        indicator.set_producer_identity(self.__author)
         if ts:
             indicator.set_produced_time(ts)
         else:
@@ -233,7 +228,7 @@ class StixManager(object):
     def _add(self, indicator):
         ioc = self._parse_indicator(indicator)
         assert len(ioc) == 1, "Multiple observables in a single indicator not supported yet"
-        ioc = ioc[0]
+        ioc = ioc.pop()
 
         # Check for duplicates
         if self.is_duplicated(ioc.value):
@@ -256,12 +251,11 @@ class StixManager(object):
         return ivalue in self._lookup
 
     def _parse_indicator(self, indicator):
-        processed_indicators = []
+        processed_indicators = set()
 
         title = indicator.title
         description = indicator.description
         timestamp = indicator.get_produced_time()
-        identifier = indicator.id_
 
         if timestamp:
             timestamp = timestamp.value
@@ -309,7 +303,7 @@ class StixManager(object):
             obj_val = obj_val.strip()
 
             ioc = StixIndicator(obj_type, obj_val, title, description, timestamp)
-            processed_indicators.append(ioc)
+            processed_indicators.add(ioc)
 
         # Return indicators
         return processed_indicators
