@@ -7,5 +7,6 @@ ordered-set==4.0.2
 python-dateutil==2.8.1
 six==1.15.0
 stix==1.2.0.11
+stix2==2.0.2
 validators==0.18.2
 weakrefmethod==1.0.3

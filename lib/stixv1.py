@@ -4,6 +4,7 @@ import re, socket, warnings, logging
 import validators
 warnings.filterwarnings("ignore")
 
+from .stix_item import StixItemType, guess_type
 from .logger import *
 from fqdn import FQDN
 from enum import Enum
@@ -31,15 +32,6 @@ ADDITIONAL_NAMESPACES = [
     Namespace('http://us-cert.gov/ciscp', 'CISCP',
               'http://www.us-cert.gov/sites/default/files/STIX_Namespace/ciscp_vocab_v1.1.1.xsd')
 ]
-
-class StixItemType(Enum):
-    UNKNOWN         =   0,
-    IPADDR          =   1,
-    DOMAIN          =   2,
-    URL             =   3,
-    SHA256          =   4,
-    MD5             =   5,
-    SHA1            =   6,
 
 class StixIndicator:
     def __init__(self, ioctype, value, title, descr, produced_time):
@@ -73,9 +65,6 @@ class StixManager(object):
 
         self._pkg = STIXPackage()
         self.set_stix_header(threat_name, threat_descr)
-        self.__regex_sha256 = re.compile(r"^[a-f0-9]{64}$", re.IGNORECASE)
-        self.__regex_md5 = re.compile(r"^[a-f0-9]{32}$", re.IGNORECASE)
-        self.__regex_sha1 = re.compile(r"^[a-f0-9]{40}$", re.IGNORECASE)
         self._src_file = None
         self.__author = author
         
@@ -83,45 +72,6 @@ class StixManager(object):
         self._lookup = set()
         self.__log = log
         
-    def guess_type(self, value):
-        '''
-        Returns (type, description)
-        '''
-
-        if not value or len(value) == 0:
-            return StixItemType.UNKNOWN, "unknown"
-
-        # SHA256 check
-        if self.__regex_sha256.match(value):
-            return StixItemType.SHA256, "SHA256"
-
-        # SHA1 check
-        if self.__regex_sha1.match(value):
-            return StixItemType.SHA1, "SHA1"
-
-        # MD5 check
-        if self.__regex_md5.match(value):
-            return StixItemType.MD5, "MD5"
-
-        # IPv4 check
-        try:
-            socket.inet_aton(value)
-            return StixItemType.IPADDR, "IPv4"
-        except socket.error:
-            pass
-
-        # Domain name
-        if len(value) <= 255:
-            fqdn = FQDN(value)
-            if fqdn.is_valid:
-                return StixItemType.DOMAIN, "domain"
-
-        # URLs
-        if validators.url(value):
-            return StixItemType.URL, "URL"
-
-        return StixItemType.UNKNOWN, "unknown"
-
     def _is_ascii(self, value):
         return value.isascii()
 
@@ -176,7 +126,7 @@ class StixManager(object):
         if not self._is_ascii(indicator_value):
             return False
 
-        indicator_type, _ = self.guess_type(indicator_value)
+        indicator_type, _ = guess_type(indicator_value)
         # Create a CyboX File Object
         if indicator_type == StixItemType.IPADDR:
             title = "Malicious IPv4 - %s" % indicator_value
@@ -237,7 +187,7 @@ class StixManager(object):
             return False
 
         # Update description
-        _, type_descr = self.guess_type(ioc.value)
+        _, type_descr = guess_type(ioc.value)
         indicator.title = "Malicious %s - %s" % (type_descr, ioc.value)
         indicator.description = "Malicious %s involved with the threat %s" % (type_descr, self._pkg.stix_header.title)
 
