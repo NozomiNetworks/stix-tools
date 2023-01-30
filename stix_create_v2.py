@@ -4,6 +4,7 @@ import argparse
 import logging
 import re
 from datetime import datetime
+from urllib.parse import urlparse
 
 from stix2 import Indicator, Bundle, Identity, Malware, Relationship, AttackPattern
 from lib.stix_item import StixItemType, guess_type
@@ -65,8 +66,9 @@ if __name__ == "__main__":
     logging.info("Title: %s" % args.threat_name)
     logging.info("Description: %s" % args.description)
 
-    if args.source and args.url:
+    if args.source:
         logging.info("Source Name: %s" % args.source)
+    if args.url:
         logging.info("Reference: %s" % args.url)
 
     if args.output:
@@ -81,7 +83,11 @@ if __name__ == "__main__":
     objects = [identity]
     malware = Malware(name=args.threat_name, is_family=False, description=args.description)
 
-    if args.source and args.url:
+    if args.url:
+        if args.source:
+            source = args.source
+        else:
+            source = urlparse(args.url).netloc
         malware_with_ref = malware.new_version(external_references=[{"source_name": args.source, "url": args.url}])
         objects.append(malware_with_ref)
     else:
