@@ -6,6 +6,7 @@ import re
 from datetime import datetime
 
 from stix2 import Indicator, Bundle, Identity, Malware, Relationship, AttackPattern
+from stix2 import TLP_WHITE, TLP_GREEN, TLP_AMBER, TLP_RED
 from lib.stix_item import StixItemType, guess_type
 from lib.logger import init_logging
 
@@ -59,6 +60,8 @@ if __name__ == "__main__":
     parser.add_argument("-s", metavar="SOURCE", dest="source", help="The name of the source")
     parser.add_argument("-u", metavar="URL", dest="url", help="URL reference to the external source")
     parser.add_argument("-m", metavar="MITRE", dest="mitre", help="Comma-separated MITRE ATT&CK techniques")
+    parser.add_argument("--tlp", metavar="TLP", dest="tlp",
+                        help="TLP color. Strings like 'TLP:GREEN' or 'amber' are accepted.")
     args = parser.parse_args()
     init_logging()
 
@@ -87,6 +90,26 @@ if __name__ == "__main__":
     else:
         objects.append(malware)
 
+    tlp_mark = None
+    if args.tlp:
+        supported_tlps = {
+            'clear': TLP_WHITE,
+            'white': TLP_WHITE,
+            'green': TLP_GREEN,
+            'amber': TLP_AMBER,
+            'red': TLP_RED,
+        }
+        tlp_str = args.tlp.lower()
+        if tlp_str.startswith('tlp:'):
+            tlp_str = tlp_str[4:]
+        if tlp_str not in supported_tlps:
+            logging.critical(
+                f'"{args.tlp}" TLP code is not supported. Terminating script.')
+            exit(1)
+        tlp_mark = supported_tlps[tlp_str]
+
+        objects.append(tlp_mark)
+
     aps = []
     if args.mitre:
         aps = ids_to_mitre_attack_patterns(args.mitre)
@@ -100,7 +123,7 @@ if __name__ == "__main__":
         description = " ".join(title.split()[:2]) + f" involved with {args.threat_name}"
         indicator = Indicator(labels="malicious-activity", pattern_type='stix', pattern=pattern,
                               valid_from=datetime.now(), description=description, name=title,
-                              created_by_ref=identity)
+                              created_by_ref=identity, object_marking_refs=tlp_mark)
         relationship = Relationship(relationship_type='indicates', source_ref=indicator.id, target_ref=malware.id)
         objects.append(indicator)
         objects.append(relationship)
