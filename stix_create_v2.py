@@ -24,7 +24,10 @@ def ioc_to_title_and_pattern(ioc_value):
     elif ioc_type == StixItemType.DOMAIN:
         return f"Malicious domain - {ioc_value}", f"[domain-name:value = '{ioc_value.lower()}']"
     elif ioc_type == StixItemType.URL:
-        return f"Malicious URL - {ioc_value}", f"[url:value = '{ioc_value}']"
+        pattern = f"[url:value = '{ioc_value}']"
+        if '\\' in pattern:
+            pattern = pattern.replace('\\', '\\\\')
+        return f"Malicious URL - {ioc_value}", pattern
     else:
         raise Exception(f"Unknown IOC type for value '{ioc_value}'")
 
