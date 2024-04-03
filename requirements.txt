@@ -10,3 +10,5 @@ stix==1.2.0.11
 stix2==2.0.2
 validators==0.18.2
 weakrefmethod==1.0.3
+pytz==2022.7.1
+colorama==0.4.3
