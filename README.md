@@ -10,6 +10,8 @@ The following indicator types are currently supported:
 * MD5
 * SHA1
 
+There is still no official support for TLP 2.0 in the stix2 library this code is using. For that reason, if you use `TLP:CLEAR`, it will be automatically translated to TLP 1.0 `TLP:WHITE` and `TLP:AMBER+STRICT` is not supported yet.
+
 # Requirements
 The code has been tested with Python >= v3.4.
 
@@ -23,6 +25,9 @@ Create a STIX 1 file starting from the example file contained in this repository
 `python3 stix_create.py -i example/indicators.txt -o /tmp/example.xml`
 
 Create a STIX 2 file starting from the example file contained in this repository:\
-`python3 stix_create_v2.py -i example/indicators.txt -t threat -d description -o /tmp/example.json`
+`python3 stix_create_v2.py -i example/indicators.txt -t threat -d description -o /tmp/example.json --pretty`
+
+Add new indictors to an existing STIX 2 file:\
+`python3 stix_create_v2.py --merge /tmp/example.json -i example/new_indicators.txt`
 
 More parameters can be set using the command-line, use the `-h` for more information.
