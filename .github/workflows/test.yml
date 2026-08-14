@@ -21,6 +21,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v7
+
+      # Runs the end-to-end tests of stix_create.py and stix_create_v2.py (tests/) on every Python version
       - name: Test
         uses: ./.github/actions/test
         with:
