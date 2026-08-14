@@ -4,13 +4,14 @@
 # STIX 2.1 bundle it produces is loaded back, validated with the stix2 library and checked.
 
 import json
+from pathlib import Path
 
 import pytest
 from stix2 import parse
 
-from conftest import (ALL_IOC, DOMAIN, INVALID_IOC, IPV4, MD5, SHA1, SHA256, URL, run_script)
+from tests.e2e.conftest import (ALL_IOC, DOMAIN, INVALID_IOC, IPV4, MD5, SHA1, SHA256, URL, run_script)
 
-SCRIPT = "stix_create_v2.py"
+SCRIPT = Path(__file__).parent.parent.parent / "stix_create_v2.py"
 
 EXPECTED_INDICATORS = {
     f"Malicious MD5 - {MD5}": f"[file:hashes.MD5 = '{MD5}']",
