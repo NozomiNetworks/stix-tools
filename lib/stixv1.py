@@ -1,13 +1,9 @@
 # Created by Nozomi Networks Labs
 
-import re, socket, warnings, logging
-import validators
-warnings.filterwarnings("ignore")
+import warnings
 
 from .stix_item import StixItemType, guess_type
-from .logger import *
-from fqdn import FQDN
-from enum import Enum
+from .logger import logging
 from datetime import datetime
 
 # python-stix
@@ -28,10 +24,13 @@ import mixbox.namespaces
 from mixbox.namespaces import Namespace
 from mixbox import fields
 
+warnings.filterwarnings("ignore")
+
 ADDITIONAL_NAMESPACES = [
     Namespace('http://us-cert.gov/ciscp', 'CISCP',
               'http://www.us-cert.gov/sites/default/files/STIX_Namespace/ciscp_vocab_v1.1.1.xsd')
 ]
+
 
 class StixIndicator:
     def __init__(self, ioctype, value, title, descr, produced_time):
@@ -46,18 +45,20 @@ class StixIndicator:
 
     @property
     def type(self):
-        return self._type 
-       
-    @type.setter 
-    def type(self, val): 
+        return self._type
+
+    @type.setter
+    def type(self, val):
         assert isinstance(val, StixItemType)
         self._type = val
 
     def is_unknown(self):
         return self._type == StixItemType.UNKNOWN
 
+
 class StixManager(object):
-    def __init__(self, threat_name="Generic Threat", threat_descr="Generic Threat", author="Nozomi Networks Labs" , log=True):
+    def __init__(self, threat_name="Generic Threat", threat_descr="Generic Threat", author="Nozomi Networks Labs",
+                 log=True):
 
         for i in ADDITIONAL_NAMESPACES:
             nsparser.STIX_NAMESPACES.add_namespace(i)
@@ -67,11 +68,10 @@ class StixManager(object):
         self.set_stix_header(threat_name, threat_descr)
         self._src_file = None
         self.__author = author
-        
 
         self._lookup = set()
         self.__log = log
-        
+
     def _is_ascii(self, value):
         return value.isascii()
 
@@ -92,7 +92,7 @@ class StixManager(object):
                 self._src_file = fname
         return True
 
-    def save_stix_file(self , file_name):
+    def save_stix_file(self, file_name):
         try:
             with open(file_name, 'wb') as f:
                 f.write(self._pkg.to_xml())
@@ -105,7 +105,7 @@ class StixManager(object):
     def set_stix_header(self, threat_name, threat_descr, threat_source=None, reference=None):
         # Create a STIX Package
         hdr = STIXHeader()
-        hdr.title =  threat_name
+        hdr.title = threat_name
         hdr.add_description(threat_descr)
         hdr.information_source = InformationSource()
 
@@ -121,7 +121,7 @@ class StixManager(object):
 
         self._pkg.stix_header = hdr
 
-    def add_raw_indicator(self , orig_indicator, ts=None):
+    def add_raw_indicator(self, orig_indicator, ts=None):
         indicator_value = orig_indicator
         if not self._is_ascii(indicator_value):
             return False
@@ -131,7 +131,7 @@ class StixManager(object):
         if indicator_type == StixItemType.IPADDR:
             title = "Malicious IPv4 - %s" % indicator_value
             descr = "Malicious IPv4 involved with %s" % self._pkg.stix_header.title
-            cybox = Address(indicator_value , Address.CAT_IPV4)
+            cybox = Address(indicator_value, Address.CAT_IPV4)
         elif indicator_type == StixItemType.DOMAIN:
             title = "Malicious domain - %s" % indicator_value
             descr = "Malicious domain involved with %s" % self._pkg.stix_header.title
@@ -141,17 +141,17 @@ class StixManager(object):
             title = "Malicious MD5 - %s" % indicator_value
             descr = "Malicious MD5 involved with %s" % self._pkg.stix_header.title
             cybox = File()
-            cybox.add_hash(indicator_value )
+            cybox.add_hash(indicator_value)
         elif indicator_type == StixItemType.SHA256:
             title = "Malicious SHA256 - %s" % indicator_value
             descr = "Malicious SHA256 involved with %s" % self._pkg.stix_header.title
             cybox = File()
-            cybox.add_hash(indicator_value )
+            cybox.add_hash(indicator_value)
         elif indicator_type == StixItemType.SHA1:
             title = "Malicious SHA1 - %s" % indicator_value
             descr = "Malicious SHA1 involved with %s" % self._pkg.stix_header.title
             cybox = File()
-            cybox.add_hash(indicator_value )
+            cybox.add_hash(indicator_value)
         elif indicator_type == StixItemType.URL:
             title = "Malicious URL - %s" % indicator_value
             descr = "Malicious URL involved with %s" % self._pkg.stix_header.title

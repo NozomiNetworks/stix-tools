@@ -1,6 +1,7 @@
 import logging
 import multiprocessing.util
 
+
 class PluginFormatter(logging.Formatter):
     """Custom logger to colorize messages."""
 
@@ -34,6 +35,7 @@ class PluginFormatter(logging.Formatter):
         msg = super(PluginFormatter, self).format(record)
         return msg
 
+
 def customize_logger(logger, fmt=multiprocessing.util.DEFAULT_LOGGING_FORMAT):
     assert len(logger.handlers) == 1
     handler = logging.StreamHandler()
@@ -41,13 +43,15 @@ def customize_logger(logger, fmt=multiprocessing.util.DEFAULT_LOGGING_FORMAT):
     handler.setFormatter(formatter)
     logger.handlers[0] = handler
 
+
 def get_logging():
     return logging
 
-def init_logging(loglevel = logging.INFO):
+
+def init_logging(loglevel=logging.INFO):
     """Initialize the logging subsystem, at the specified level."""
     # Set the proper verbosity level
-    if  isinstance(loglevel, int):
+    if isinstance(loglevel, int):
         numeric_loglevel = loglevel
     else:
         numeric_loglevel = getattr(logging, loglevel.upper(), None)
