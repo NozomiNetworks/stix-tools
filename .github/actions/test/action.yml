@@ -26,8 +26,8 @@ runs:
       run: pip install -r requirements.txt
       shell: bash
     - name: Run stix_create.py
-      run: python stix_create.py
+      run: python stix_create.py -h
       shell: bash
     - name: Run stix_create_v2.py
-      run: python stix_create_v2.py
+      run: python stix_create_v2.py -h
       shell: bash
