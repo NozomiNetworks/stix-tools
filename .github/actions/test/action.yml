@@ -1,0 +1,33 @@
+---
+name: Run tests
+description: Run tests
+
+inputs:
+  python-version:
+    required: true
+    description: Python version to test
+  platform_archs:
+    required: false
+    default: linux/amd64
+    description: Platform archs
+runs:
+  using: composite
+
+  steps:
+    - name: Checkout Code
+      uses: actions/checkout@v7
+      with:
+        fetch-depth: 0
+    - name: Set up Python
+      uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
+      with:
+        python-version: ${{ inputs.python-version }}
+    - name: Install dependencies
+      run: pip install -r requirements.txt
+      shell: bash
+    - name: Run stix_create.py
+      run: python stix_create.py
+      shell: bash
+    - name: Run stix_create_v2.py
+      run: python stix_create_v2.py
+      shell: bash
