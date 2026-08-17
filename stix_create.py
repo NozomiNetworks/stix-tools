@@ -1,6 +1,7 @@
 # Created by Nozomi Networks Labs
 
 import sys
+
 if sys.version_info < (3, 4):
     print("Please use python >= 3.4")
     exit(1)
@@ -12,11 +13,13 @@ from lib.stixv1 import StixManager
 from lib.logger import init_logging
 
 if __name__ == "__main__":
-
     parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-    parser.add_argument("-i", metavar="INFILE", dest="infile", help="Input file containing raw indicators", required=True)
-    parser.add_argument("-o", metavar="OUTFILE", dest="outfile", help="STIX file containing the indicators", required=True)
-    parser.add_argument("-a", metavar="AUTHOR", dest="author", default="Nozomi Networks Labs", help="Author creating the STIX")
+    parser.add_argument("-i", metavar="INFILE", dest="infile", help="Input file containing raw indicators",
+                        required=True)
+    parser.add_argument("-o", metavar="OUTFILE", dest="outfile", help="STIX file containing the indicators",
+                        required=True)
+    parser.add_argument("-a", metavar="AUTHOR", dest="author", default="Nozomi Networks Labs",
+                        help="Author creating the STIX")
     parser.add_argument("-t", metavar="THREAT", dest="threat", help="Threat name")
     parser.add_argument("-d", metavar="DESCRIPTION", dest="description", help="Threat description")
     parser.add_argument("-s", metavar="SOURCE_INFO", dest="srcinfo", help="Source information")
