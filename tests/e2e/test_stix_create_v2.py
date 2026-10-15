@@ -275,16 +275,31 @@ def test_produced_time_is_used_for_the_indicators(tmp_path, write_iocs):
     assert objects_of(bundle, "malware")[0]["created"].startswith("2024-05-06T10:11:12")
 
 
-def test_indicators_are_split_in_chunks_over_the_limit(tmp_path, write_iocs):
-    outfile = tmp_path / "out.json"
+@pytest.mark.parametrize("output_name, extra_name", [
+    ("out.json", "out_1.json"),
+    ("out.stix", "out_1.stix"),
+    ("out", "out_1"),
+    ("out.JSON", "out_1.JSON"),
+    ("out.json.backup.json", "out.json.backup_1.json"),
+    ("reports.json/out.json", "reports.json/out_1.json"),
+])
+def test_indicators_are_split_in_chunks_over_the_limit(tmp_path, write_iocs, output_name, extra_name):
+    outfile = tmp_path / output_name
+    outfile.parent.mkdir(parents=True, exist_ok=True)
     iocs = [f"10.{i // 256}.{i % 256}.1" for i in range(1200)]
 
-    assert create(outfile, write_iocs(iocs)).returncode == 0
+    result = create(outfile, write_iocs(iocs))
 
-    extra_chunk = tmp_path / "out_1.json"
+    assert result.returncode == 0, result.stderr
+    extra_chunk = tmp_path / extra_name
     assert extra_chunk.exists()
-    assert len(objects_of(load(outfile), "indicator")) == 1000
-    assert len(objects_of(load(extra_chunk), "indicator")) == 200
+    first_indicators = objects_of(load(outfile), "indicator")
+    extra_indicators = objects_of(load(extra_chunk), "indicator")
+    assert len(first_indicators) == 1000
+    assert len(extra_indicators) == 200
+    assert {i["pattern"] for i in first_indicators + extra_indicators} == {
+        f"[ipv4-addr:value = '{ioc}']" for ioc in iocs
+    }
 
 
 def test_merge_adds_new_indicators_to_an_existing_bundle(tmp_path, write_iocs):
