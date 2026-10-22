@@ -8,6 +8,7 @@ import datetime
 import dateutil.parser
 from colorama import Fore
 from decimal import Decimal
+from pathlib import Path
 from urllib.parse import urlparse
 
 from stix2 import Indicator, Bundle, Identity, Malware, Relationship, AttackPattern, parse
@@ -269,10 +270,10 @@ if __name__ == "__main__":
 
         indent = 4 if args.pretty else None
         if args.output:
+            output_filename = Path(args.output)
             if len(all_ioc) > INDICATOR_LIMIT and cur_chunk > 0:
-                output_filename = args.output.replace(".json", f"_{cur_chunk}.json")
-            else:
-                output_filename = args.output
+                output_filename = output_filename.with_name(
+                    f"{output_filename.stem}_{cur_chunk}{output_filename.suffix}")
             with open(output_filename, 'w') as f:
                 f.write(bundle.serialize(indent=indent))
         else:
